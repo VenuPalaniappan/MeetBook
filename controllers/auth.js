@@ -58,8 +58,10 @@ export const login = (req, res) => {
 
     const { password, ...others } = data[0];
     res
-      .cookie("access_token", token, {
+      .cookie("accessToken", token, {
         httpOnly: true,
+        sameSite: "Lax", // or "None" if using HTTPS
+        secure: false,   // true if HTTPS
       })
       .status(200)
       .json(others);
@@ -73,7 +75,7 @@ export const googleLogin = async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: "610678762174-fnclg74ph275t4du3tb5k4gg67nsr1k1.apps.googleusercontent.com", 
+      audience: "YOUR_GOOGLE_CLIENT_ID", // Replace with your actual Client ID
     });
 
     const payload = ticket.getPayload();
@@ -87,10 +89,10 @@ export const googleLogin = async (req, res) => {
         const insertQ =
           "INSERT INTO users (`username`, `email`, `name`, `password`) VALUES (?)";
         const values = [
-          payload.email, // using email as username
+          payload.email,
           payload.email,
           payload.name,
-          "", // no password for Google login
+          "",
         ];
 
         db.query(insertQ, [values], (err, result) => {
@@ -100,7 +102,11 @@ export const googleLogin = async (req, res) => {
           const token = jwt.sign({ id: newUserId }, "secretkey");
 
           res
-            .cookie("access_token", token, { httpOnly: true })
+            .cookie("accessToken", token, {
+              httpOnly: true,
+              sameSite: "Lax",
+              secure: false,
+            })
             .status(200)
             .json({
               id: newUserId,
@@ -110,12 +116,16 @@ export const googleLogin = async (req, res) => {
             });
         });
       } else {
-        // Existing user: login
+        // Existing user
         const token = jwt.sign({ id: data[0].id }, "secretkey");
         const { password, ...others } = data[0];
 
         res
-          .cookie("access_token", token, { httpOnly: true })
+          .cookie("accessToken", token, {
+            httpOnly: true,
+            sameSite: "Lax",
+            secure: false,
+          })
           .status(200)
           .json(others);
       }
@@ -129,9 +139,9 @@ export const googleLogin = async (req, res) => {
 // LOGOUT USER
 export const logout = (req, res) => {
   res
-    .cookie("access_token", "", {
-      secure: true,
-      sameSite: "none",
+    .clearCookie("accessToken", {
+      sameSite: "Lax", // "None" if cross-site
+      secure: false,   // true if using HTTPS
     })
     .status(200)
     .json("User logged out");
