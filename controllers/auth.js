@@ -58,7 +58,7 @@ export const login = (req, res) => {
 
     const { password, ...others } = data[0];
     res
-      .cookie("accessToken", token, {
+      .cookie("access_token", token, {
         httpOnly: true,
         sameSite: "Lax", // or "None" if using HTTPS
         secure: false,   // true if HTTPS
