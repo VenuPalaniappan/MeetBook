@@ -11,7 +11,7 @@ export const getLikes = (req,res)=>{
 }
 
 export const addLike = (req, res) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.access_token;
   if (!token) return res.status(401).json("Not logged in!");
 
   jwt.verify(token, "secretkey", (err, userInfo) => {
