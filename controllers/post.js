@@ -16,7 +16,7 @@ export const getPosts = (req, res) => {
     const q =
       userId !== "undefined"
         ? `
-      SELECT 
+      SELECT DISTINCT
         p.*, 
         u.id AS userId, u.name AS userName, u.profilePic AS profilePic,
         op.desc AS originalDesc, op.img AS originalImg, 
@@ -29,7 +29,7 @@ export const getPosts = (req, res) => {
       ORDER BY p.createdAt DESC
       `
         : `
-      SELECT 
+      SELECT DISTINCT
         p.*, 
         u.id AS userId, u.name AS userName, u.profilePic AS userProfilePic,
         op.desc AS originalDesc, op.img AS originalImg, 
