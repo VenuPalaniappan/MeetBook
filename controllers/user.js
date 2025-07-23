@@ -17,7 +17,7 @@ export const getUser = (req, res) => {
 
 // ✅ Update user (requires JWT)
 export const updateUser = (req, res) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.access_token;
   if (!token) return res.status(401).json("Not authenticated!");
 
   jwt.verify(token, "secretkey", (err, userInfo) => {
