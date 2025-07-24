@@ -13,6 +13,7 @@ import relationshipRoutes from "./routes/relationships.js";
 import storyRoutes from "./routes/stories.js";
 import friendsRoutes from "./routes/friends.js";
 import galleryRoutes from "./routes/gallery.js";
+import activityRoutes from "./routes/activities.js";
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use("/api/relationships", relationshipRoutes);
 app.use("/api/stories", storyRoutes);
 app.use("/api/friends", friendsRoutes);
 app.use("/api/gallery", galleryRoutes);
+app.use("/api/activities", activityRoutes);
 
 // Server start
 app.listen(8800, () => {

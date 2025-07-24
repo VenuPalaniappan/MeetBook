@@ -1,6 +1,7 @@
 import { db } from "../connect.js";
 import jwt from "jsonwebtoken";
 import moment from "moment";
+import { logActivity } from "../utils/activityLogger.js";
 
 export const getPosts = (req, res) => {
   const userId = req.query.userId;
@@ -70,7 +71,9 @@ export const addPost = (req, res) => {
 
     db.query(q, [values], (err, data) => {
       if (err) return res.status(500).json(err);
+        logActivity(userInfo.id, "post", req.body.desc, data.insertId); 
       return res.status(200).json("Post has been created.");
+
     });
   });
 };
@@ -113,5 +116,22 @@ export const sharePost = (req, res) => {
 
     console.log("✅ Share inserted successfully");
     return res.status(200).json("Post shared successfully");
+  });
+};
+
+export const getSinglePost = (req, res) => {
+  const postId = req.params.id;
+
+  const q = `
+    SELECT p.*, u.id AS userId, u.name AS userName, u.profilePic
+    FROM posts AS p
+    JOIN users AS u ON u.id = p.userId
+    WHERE p.id = ?
+  `;
+
+  db.query(q, [postId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    if (data.length === 0) return res.status(404).json("Post not found");
+    return res.status(200).json(data[0]);
   });
 };
