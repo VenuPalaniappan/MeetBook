@@ -4,7 +4,6 @@ import multer from "multer";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/posts.js";
@@ -13,6 +12,7 @@ import likeRoutes from "./routes/likes.js";
 import relationshipRoutes from "./routes/relationships.js";
 import storyRoutes from "./routes/stories.js";
 import friendsRoutes from "./routes/friends.js";
+import galleryRoutes from "./routes/gallery.js";
 
 const app = express();
 
@@ -56,6 +56,7 @@ app.use("/api/likes", likeRoutes);
 app.use("/api/relationships", relationshipRoutes);
 app.use("/api/stories", storyRoutes);
 app.use("/api/friends", friendsRoutes);
+app.use("/api/gallery", galleryRoutes);
 
 // Server start
 app.listen(8800, () => {
