@@ -15,16 +15,17 @@ export const getStories = (req, res) => {
     console.log("User ID from token:", userInfo.id);
 
     const q = `
-      SELECT s.*, u.name, u.profilePic 
+     SELECT s.*, u.name, u.profilePic 
       FROM stories AS s 
       JOIN users AS u ON (u.id = s.userId)
-      LEFT JOIN relationships AS r 
-        ON (s.userId = r.followedUserId AND r.followerUserId = ?)
+      WHERE s.userId = ? OR s.userId IN (
+        SELECT followedUserId FROM relationships WHERE followerUserId = ?
+      )
       ORDER BY s.createdAt DESC
       LIMIT 4
     `;
 
-    db.query(q, [userInfo.id], (err, data) => {
+    db.query(q, [userInfo.id,userInfo.id], (err, data) => {
       if (err) {
         console.error("💥 SQL Error in /api/stories:", err.sqlMessage || err);
         return res.status(500).json("Server error");
