@@ -14,6 +14,7 @@ import storyRoutes from "./routes/stories.js";
 import friendsRoutes from "./routes/friends.js";
 import galleryRoutes from "./routes/gallery.js";
 import activityRoutes from "./routes/activities.js";
+import messageRoutes from "./routes/message.js";
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use("/api/stories", storyRoutes);
 app.use("/api/friends", friendsRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/activities", activityRoutes);
+app.use("/api/message", messageRoutes);
 
 // Server start
 app.listen(8800, () => {
