@@ -10,9 +10,10 @@ export const getUserImages  = (req, res) => {
     if (err) return res.status(403).json("Token not valid!");
 
     const q = `
-      SELECT profilePic, coverPic
-      FROM users
-      WHERE id = ?
+      SELECT image, type, createdAt
+      FROM gallery
+      WHERE userId = ?
+      ORDER BY createdAt DESC
     `;
 
     db.query(q, [userInfo.id], (err, data) => {
@@ -21,12 +22,7 @@ export const getUserImages  = (req, res) => {
         return res.status(500).json(err);
       }
 
-   
-      const images = [];
-      if (data[0]?.profilePic) images.push(data[0].profilePic);
-      if (data[0]?.coverPic) images.push(data[0].coverPic);
-
-      return res.status(200).json(images);
+      return res.status(200).json(data);
     });
   });
 };

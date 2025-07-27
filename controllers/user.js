@@ -23,6 +23,8 @@ export const updateUser = (req, res) => {
   jwt.verify(token, "secretkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
+    const { name, city, website, profilePic, coverPic } = req.body;
+
     const q = `
       UPDATE users SET name=?, city=?, website=?, profilePic=?, coverPic=? 
       WHERE id=?
@@ -30,18 +32,36 @@ export const updateUser = (req, res) => {
 
     db.query(
       q,
-      [
-        req.body.name,
-        req.body.city,
-        req.body.website,
-        req.body.profilePic,
-        req.body.coverPic,
-        userInfo.id,
-      ],
+      [name, city, website, profilePic, coverPic, userInfo.id],
       (err, data) => {
         if (err) return res.status(500).json(err);
-        if (data.affectedRows > 0) return res.json("Updated!");
-        return res.status(403).json("You can update only your account!");
+        if (data.affectedRows === 0) {
+          return res.status(403).json("You can update only your account!");
+        }
+
+        // ✅ Insert into gallery if profilePic was updated
+        if (profilePic) {
+          db.query(
+            "INSERT INTO gallery (userId, image, type) VALUES (?, ?, 'profile')",
+            [userInfo.id, profilePic],
+            (err) => {
+              if (err) console.error("Failed to insert profilePic into gallery:", err);
+            }
+          );
+        }
+
+        // ✅ Insert into gallery if coverPic was updated
+        if (coverPic) {
+          db.query(
+            "INSERT INTO gallery (userId, image, type) VALUES (?, ?, 'cover')",
+            [userInfo.id, coverPic],
+            (err) => {
+              if (err) console.error("Failed to insert coverPic into gallery:", err);
+            }
+          );
+        }
+
+        return res.status(200).json("User updated successfully!");
       }
     );
   });
