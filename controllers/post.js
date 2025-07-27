@@ -32,7 +32,7 @@ export const getPosts = (req, res) => {
         : `
       SELECT DISTINCT
         p.*, 
-        u.id AS userId, u.name AS userName, u.profilePic AS userProfilePic,
+        u.id AS userId, u.name AS userName, u.profilePic AS profilePic,
         op.desc AS originalDesc, op.img AS originalImg, 
         ou.id AS originalUserId, ou.name AS originalUserName, ou.profilePic AS originalProfilePic
       FROM posts AS p
