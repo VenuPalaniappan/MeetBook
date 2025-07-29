@@ -16,6 +16,7 @@ import galleryRoutes from "./routes/gallery.js";
 import activityRoutes from "./routes/activities.js";
 import messageRoutes from "./routes/message.js";
 
+
 const app = express();
 
 // Required for __dirname in ES Modules
@@ -60,7 +61,7 @@ app.use("/api/stories", storyRoutes);
 app.use("/api/friends", friendsRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/activities", activityRoutes);
-app.use("/api/message", messageRoutes);
+app.use("/api/messages", messageRoutes);
 
 // Server start
 app.listen(8800, () => {

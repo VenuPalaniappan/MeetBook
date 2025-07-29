@@ -4,6 +4,6 @@ import { getSuggestedFriends,getAllFriends} from "../controllers/friends.js";
 const router = express.Router();
 
 router.get("/suggestions", getSuggestedFriends);
-router.get("/allFriends", getAllFriends);
+router.get("/all", getAllFriends);
 
 export default router;
