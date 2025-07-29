@@ -61,3 +61,41 @@ export const getAllFriends = (req, res) => {
     });
   });
 };
+
+export const addFriend = (req, res) => {
+  const token = req.cookies.access_token;
+  if (!token) return res.status(401).json("Not authenticated!");
+
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Token not valid!");
+
+    const q = "INSERT INTO relationships (followerUserId, followedUserId) VALUES (?, ?)";
+
+    db.query(q, [userInfo.id, req.body.friendId], (err, data) => {
+      if (err) {
+        console.error("Error adding friend:", err);
+        return res.status(500).json(err);
+      }
+      return res.status(200).json("Friend added successfully!");
+    });
+  });
+};
+
+export const unfriend = (req, res) => {
+  const token = req.cookies.access_token;
+  if (!token) return res.status(401).json("Not authenticated!");
+
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Token not valid!");
+
+    const q = "DELETE FROM relationships WHERE followerUserId = ? AND followedUserId = ?";
+
+    db.query(q, [userInfo.id, req.body.friendId], (err, data) => {
+      if (err) {
+        console.error("Error unfriending user:", err);
+        return res.status(500).json(err);
+      }
+      return res.status(200).json("Unfriended successfully!");
+    });
+  });
+};
