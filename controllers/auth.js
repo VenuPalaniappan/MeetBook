@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
 // Replace with your actual Google Client ID
-const client = new OAuth2Client("YOUR_GOOGLE_CLIENT_ID");
+const client = new OAuth2Client("312406723411-vqjb9kr969fd4giig6dvmm8l7gfucclk.apps.googleusercontent.com");
 
 // TEST
 export const test = (req, res) => {
@@ -75,7 +75,7 @@ export const googleLogin = async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: "YOUR_GOOGLE_CLIENT_ID", // Replace with your actual Client ID
+      audience: "312406723411-vqjb9kr969fd4giig6dvmm8l7gfucclk.apps.googleusercontent.com", 
     });
 
     const payload = ticket.getPayload();
