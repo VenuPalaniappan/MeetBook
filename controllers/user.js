@@ -69,7 +69,7 @@ export const updateUser = (req, res) => {
 
 // ✅ Get friend suggestions (excluding self)
 export const getSuggestions = (req, res) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.access_token;
   if (!token) return res.status(401).json("Not authenticated!");
 
   jwt.verify(token, "secretkey", (err, userInfo) => {
@@ -112,7 +112,7 @@ export const getOnlineFriends = (req, res) => {
 };
 
 export const checkProfileAccess = (req, res) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.access_token;
   if (!token) return res.status(401).json("Not authenticated");
 
   jwt.verify(token, "secretkey", (err, userInfo) => {
@@ -138,5 +138,43 @@ export const checkProfileAccess = (req, res) => {
         return res.status(403).json({ access: "none" });
       }
     });
+  });
+};
+
+export const searchUsers = (req, res) => {
+  let userId = null;
+
+  const token = req.cookies.access_token;
+  if (token) {
+    try {
+      const userInfo = jwt.verify(token, "secretkey");
+      userId = userInfo.id;
+    } catch (err) {
+      console.warn("Invalid token.");
+    }
+  }
+
+  const query = req.query.query || "";
+  const searchTerm = `%${query}%`;
+  const includeSelf = req.query.includeSelf === "true";
+
+  console.log("Search:", searchTerm, "User ID:", userId);
+
+  let sql = `
+    SELECT id, name, profilePic 
+    FROM users 
+    WHERE name LIKE ?
+  `;
+  const values = [searchTerm];
+
+  if (userId !== null && !includeSelf) {
+    sql += ` AND id != ?`;
+    values.push(userId);
+  }
+
+  db.query(sql, values, (err, data) => {
+    if (err) return res.status(500).json(err);
+    if (data.length === 0) return res.status(404).json("User not found");
+    return res.status(200).json(data);
   });
 };
