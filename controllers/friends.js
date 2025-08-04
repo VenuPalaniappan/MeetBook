@@ -187,3 +187,25 @@ export const rejectFriendRequest = (req, res) => {
     });
   });
 };
+
+export const followUser = (req, res) => {
+  const token = req.cookies.access_token;
+  if (!token) return res.status(401).json("Not authenticated!");
+
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Token not valid!");
+
+    const q = "INSERT INTO relationships (followerUserId, followedUserId) VALUES (?)";
+    const values = [userInfo.id, req.body.followedUserId];
+
+    db.query(q, [values], (err) => {
+      if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(409).json("Already following this user");
+        }
+        return res.status(500).json(err);
+      }
+      return res.status(200).json("Followed successfully");
+    });
+  });
+};

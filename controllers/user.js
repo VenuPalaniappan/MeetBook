@@ -75,9 +75,26 @@ export const getSuggestions = (req, res) => {
   jwt.verify(token, "secretkey", (err, userInfo) => {
     if (err) return res.status(403).json("Token is not valid!");
 
-    const q = "SELECT id, name, profilePic FROM users WHERE id != ? LIMIT 5";
+    const q = `
+      SELECT id, name, profilePic 
+      FROM users 
+      WHERE id != ?
+        AND id NOT IN (
+          SELECT r1.followedUserId
+          FROM relationships r1
+          JOIN relationships r2
+            ON r1.followedUserId = r2.followerUserId
+           AND r1.followerUserId = r2.followedUserId
+          WHERE r1.followerUserId = ?
+        )
+        AND id NOT IN (
+          SELECT followedUserId FROM relationships WHERE followerUserId = ?
+        )
+      LIMIT 5
+    `;
 
-    db.query(q, [userInfo.id], (err, data) => {
+
+    db.query(q, [userInfo.id,userInfo.id], (err, data) => {
       if (err) return res.status(500).json(err);
       return res.status(200).json(data);
     });
@@ -91,5 +108,35 @@ export const getOnlineFriends = (req, res) => {
   db.query(q, (err, data) => {
     if (err) return res.status(500).json(err);
     return res.status(200).json(data);
+  });
+};
+
+export const checkProfileAccess = (req, res) => {
+  const token = req.cookies.accessToken;
+  if (!token) return res.status(401).json("Not authenticated");
+
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Invalid token");
+
+    const profileUserId = req.params.id;
+
+    if (parseInt(userInfo.id) === parseInt(profileUserId)) {
+      return res.status(200).json({ access: "full" });
+    }
+
+    const q = `
+      SELECT * FROM relationships
+      WHERE followerUserId = ? AND followedUserId = ?
+    `;
+
+    db.query(q, [userInfo.id, profileUserId], (err, data) => {
+      if (err) return res.status(500).json(err);
+
+      if (data.length > 0) {
+        return res.status(200).json({ access: "posts" });
+      } else {
+        return res.status(403).json({ access: "none" });
+      }
+    });
   });
 };
