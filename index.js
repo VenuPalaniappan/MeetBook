@@ -15,6 +15,7 @@ import friendsRoutes from "./routes/friends.js";
 import galleryRoutes from "./routes/gallery.js";
 import activityRoutes from "./routes/activities.js";
 import messageRoutes from "./routes/message.js";
+import aiRoutes from "./routes/ai.js";
 
 
 
@@ -63,6 +64,7 @@ app.use("/api/friends", friendsRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/ai", aiRoutes);
 
 
 // Server start
