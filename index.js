@@ -16,6 +16,8 @@ import galleryRoutes from "./routes/gallery.js";
 import activityRoutes from "./routes/activities.js";
 import messageRoutes from "./routes/message.js";
 import aiRoutes from "./routes/ai.js";
+import setting from "./routes/setting.js";
+import settingsRoutes from "./routes/setting.js";
 
 
 
@@ -65,6 +67,8 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/settings", setting);
+app.use("/api/settings", settingsRoutes);
 
 
 // Server start
