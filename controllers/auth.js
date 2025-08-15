@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
-// Replace with your actual Google Client ID
+
 const client = new OAuth2Client("312406723411-vqjb9kr969fd4giig6dvmm8l7gfucclk.apps.googleusercontent.com");
 
 // TEST
@@ -102,7 +102,7 @@ export const googleLogin = async (req, res) => {
           const token = jwt.sign({ id: newUserId }, "secretkey");
 
           res
-            .cookie("accessToken", token, {
+            .cookie("access_token", token, {
               httpOnly: true,
               sameSite: "Lax",
               secure: false,
@@ -121,7 +121,7 @@ export const googleLogin = async (req, res) => {
         const { password, ...others } = data[0];
 
         res
-          .cookie("accessToken", token, {
+          .cookie("access_token", token, {
             httpOnly: true,
             sameSite: "Lax",
             secure: false,
@@ -139,7 +139,7 @@ export const googleLogin = async (req, res) => {
 // LOGOUT USER
 export const logout = (req, res) => {
   res
-    .clearCookie("accessToken", {
+    .clearCookie("access_token", {
       sameSite: "Lax", // "None" if cross-site
       secure: false,   // true if using HTTPS
     })
