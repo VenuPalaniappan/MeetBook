@@ -28,6 +28,9 @@ const KEY_VALIDATORS = {
   birthdayVisibility: AUDIENCE_VALUES,
   marriedVisibility: AUDIENCE_VALUES,
   cityVisibility: AUDIENCE_VALUES,
+  friendsListVisibility: AUDIENCE_VALUES,
+  followingVisibility: AUDIENCE_VALUES,
+  profileFindVisibility: AUDIENCE_VALUES,
 };
 const ALLOWED_KEYS = new Set(Object.keys(KEY_VALIDATORS));
 
@@ -35,7 +38,7 @@ export const getSettings = (req, res) => {
   withAuth(req, res, (uid) => {
     const q = `
       SELECT userId, defaultAudience, discoverByName, emailVisibility, birthdayVisibility,
-              cityVisibility,marriedVisibility
+              cityVisibility,marriedVisibility, friendsListVisibility, followingVisibility,profileFindVisibility
       FROM user_settings
       WHERE userId = ?
     `;
@@ -53,6 +56,9 @@ export const getSettings = (req, res) => {
           birthdayVisibility: "only_me",
           marriedVisibility: "only_me",
           cityVisibility: "only_me",
+          friendsListVisibility: "friends",
+          followingVisibility: "friends",
+          profileFindVisibility: "friends",
         };
       res.status(200).json(data);
     });
