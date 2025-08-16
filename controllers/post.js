@@ -18,7 +18,7 @@ export const getPosts = (req, res) => {
       userId !== "undefined"
         ? `
       SELECT DISTINCT
-        p.*, 
+        p.*, p.place_id AS placeId,p.place_lat AS placeLat,p.place_lng AS placeLng,
         u.id AS userId, u.name AS userName, u.profilePic AS profilePic,
         op.desc AS originalDesc, op.img AS originalImg, 
         ou.id AS originalUserId, ou.name AS originalUserName, ou.profilePic AS originalProfilePic
@@ -31,7 +31,7 @@ export const getPosts = (req, res) => {
       `
         : `
       SELECT DISTINCT
-        p.*, 
+        p.*, p.place_id AS placeId,p.place_lat AS placeLat,p.place_lng AS placeLng,
         u.id AS userId, u.name AS userName, u.profilePic AS profilePic,
         op.desc AS originalDesc, op.img AS originalImg, 
         ou.id AS originalUserId, ou.name AS originalUserName, ou.profilePic AS originalProfilePic
@@ -59,80 +59,116 @@ export const addPost = (req, res) => {
     if (err) return res.status(403).json("Token is not valid!");
     console.log("Post data from frontend:", req.body);
 
-    const q =
-      "INSERT INTO posts(`desc`, `img`, `place`, `friends`, `createdAt`, `userId`) VALUES (?)";
+   const {
+      desc,
+      img,
+      place,     
+      placeId,    
+      placeLat,   
+      placeLng, 
+      friends,
+    } = req.body;
+
+   const lat =
+      placeLat === null || placeLat === undefined || placeLat === ""
+        ? null
+        : Number(placeLat);
+    const lng =
+      placeLng === null || placeLng === undefined || placeLng === ""
+        ? null
+        : Number(placeLng);
+
+     const q = `
+      INSERT INTO posts
+        (\`desc\`, \`img\`, \`userId\`, \`place\`, \`place_id\`, \`place_lat\`, \`place_lng\`, \`friends\`, \`createdAt\`)
+      VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    `;
+
     const values = [
-      req.body.desc,
-      req.body.img || null,
-      req.body.place || null,
-      req.body.friends || null,
-      moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
+      desc || null,
+      img || null,
       userInfo.id,
+      place || null,
+      placeId || null,
+      Number.isFinite(lat) ? lat : null,
+      Number.isFinite(lng) ? lng : null,
+      friends || null,
     ];
 
-    db.query(q, [values], (err, data) => {
-      if (err) return res.status(500).json(err);
-        logActivity(userInfo.id, "post", req.body.desc, data.insertId); 
-      return res.status(200).json("Post has been created.");
-
-    });
-  });
-};
-export const deletePost = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not logged in!");
-
-  jwt.verify(token, "secretkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid!");
-
-    const q =
-      "DELETE FROM posts WHERE `id`=? AND `userId` = ?";
-
-    db.query(q, [req.params.id, userInfo.id], (err, data) => {
-      if (err) return res.status(500).json(err);
-      if(data.affectedRows>0) return res.status(200).json("Post has been deleted.");
-      return res.status(403).json("You can delete only your post")
+     db.query(q, values, (sqlErr, data) => {
+      if (sqlErr) {
+        // 🔎 Make the real cause visible in your terminal
+        console.error("AddPost SQL error:", sqlErr?.sqlMessage || sqlErr, {
+          values,
+        });
+        return res.status(500).json(sqlErr);
+      }
+      try {
+        logActivity(userInfo.id, "post", desc || "", data.insertId);
+      } catch (_) {}
+      return res.status(200).json({ id: data.insertId, ok: true });
     });
   });
 };
 
-export const sharePost = (req, res) => {
-  const { originalPostId, userId, desc } = req.body;
 
-  console.log("🔥 SHARE POST HIT");
-  console.log("Request body:", req.body);
+    export const deletePost = (req, res) => {
+      const token = req.cookies.access_token;
+      if (!token) return res.status(401).json("Not logged in!");
 
-  const q = `
-    INSERT INTO posts (\`desc\`, \`img\`, \`place\`, \`friends\`, \`userId\`, \`createdAt\`, \`isShared\`, \`sharedPostId\`)
-    SELECT ?, \`img\`, \`place\`, \`friends\`, ?, NOW(), 1, \`id\`
-    FROM posts
-    WHERE id = ?
-  `;
+      jwt.verify(token, "secretkey", (err, userInfo) => {
+        if (err) return res.status(403).json("Token is not valid!");
 
-  db.query(q, [desc, userId, originalPostId], (err, data) => {
-    if (err) {
-      console.error("❌ SQL ERROR in sharePost:", err);
-      return res.status(500).json({ message: "DB error", error: err });
-    }
+        const q =
+          "DELETE FROM posts WHERE `id`=? AND `userId` = ?";
 
-    console.log("✅ Share inserted successfully");
-    return res.status(200).json("Post shared successfully");
-  });
-};
+        db.query(q, [req.params.id, userInfo.id], (err, data) => {
+          if (err) return res.status(500).json(err);
+          if(data.affectedRows>0) return res.status(200).json("Post has been deleted.");
+          return res.status(403).json("You can delete only your post")
+        });
+      });
+    };
 
-export const getSinglePost = (req, res) => {
-  const postId = req.params.id;
+      export const sharePost = (req, res) => {
+        const { originalPostId, userId, desc } = req.body;
 
-  const q = `
-    SELECT p.*, u.id AS userId, u.name AS userName, u.profilePic
-    FROM posts AS p
-    JOIN users AS u ON u.id = p.userId
-    WHERE p.id = ?
-  `;
+        console.log("🔥 SHARE POST HIT");
+        console.log("Request body:", req.body);
 
-  db.query(q, [postId], (err, data) => {
-    if (err) return res.status(500).json(err);
-    if (data.length === 0) return res.status(404).json("Post not found");
-    return res.status(200).json(data[0]);
-  });
-};
+        const q = `
+          INSERT INTO posts (\`desc\`, \`img\`, \`place\`, \`friends\`, \`userId\`, \`createdAt\`, \`isShared\`, \`sharedPostId\`)
+          SELECT ?, \`img\`, ?, \`place\`, \`place_id\`, \`place_lat\`, \`place_lng\`,\`friends\`, NOW(), 1, \`id\`
+          FROM posts
+          WHERE id = ?
+        `;
+
+        db.query(q, [desc, userId, originalPostId], (err, data) => {
+          if (err) {
+            console.error("❌ SQL ERROR in sharePost:", err);
+            return res.status(500).json({ message: "DB error", error: err });
+          }
+
+          console.log("✅ Share inserted successfully");
+          return res.status(200).json("Post shared successfully");
+        });
+      };
+
+        export const getSinglePost = (req, res) => {
+          const postId = req.params.id;
+
+          const q = `
+            SELECT p.*, p.place_id AS placeId,p.place_lat AS placeLat,p.place_lng AS placeLng,
+            u.id AS userId, u.name AS userName, u.profilePic
+            FROM posts AS p
+            JOIN users AS u ON u.id = p.userId
+            WHERE p.id = ?
+          `;
+
+          db.query(q, [postId], (err, data) => {
+            if (err) return res.status(500).json(err);
+            if (data.length === 0) return res.status(404).json("Post not found");
+            return res.status(200).json(data[0]);
+          });
+        };
