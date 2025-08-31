@@ -1,5 +1,5 @@
 import express from "express";
-import { getPosts, addPost, deletePost,sharePost,getSinglePost } from "../controllers/post.js";
+import { getPosts, addPost, deletePost,sharePost,getSinglePost,updatePost } from "../controllers/post.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
 
@@ -10,6 +10,6 @@ router.post("/", addPost);
 router.delete("/:id", deletePost);
 router.post("/share", sharePost);
 router.get("/single/:id", verifyToken, getSinglePost);
-
+router.put("/:id", verifyToken, updatePost); 
 
 export default router;

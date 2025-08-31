@@ -134,23 +134,22 @@ export const addPost = (req, res) => {
       export const sharePost = (req, res) => {
         const { originalPostId, userId, desc } = req.body;
 
-        console.log("🔥 SHARE POST HIT");
-        console.log("Request body:", req.body);
+        
 
         const q = `
-          INSERT INTO posts (\`desc\`, \`img\`, \`place\`, \`friends\`, \`userId\`, \`createdAt\`, \`isShared\`, \`sharedPostId\`)
-          SELECT ?, \`img\`, ?, \`place\`, \`place_id\`, \`place_lat\`, \`place_lng\`,\`friends\`, NOW(), 1, \`id\`
-          FROM posts
-          WHERE id = ?
-        `;
-
+            INSERT INTO posts(\`desc\`, \`img\`, \`userId\`,\`createdAt\`, \`updatedAt\`,\`place\`, \`friends\`,\`sharedPostId\`, \`isShared\`,\`place_id\`, \`place_lat\`, \`place_lng\`)
+            SELECT ?, p.img,?,NOW(),NOW(),p.place, p.friends,p.id,1,            
+              p.place_id, p.place_lat, p.place_lng
+            FROM posts p
+            WHERE p.id = ?;
+          `;
         db.query(q, [desc, userId, originalPostId], (err, data) => {
           if (err) {
             console.error("❌ SQL ERROR in sharePost:", err);
             return res.status(500).json({ message: "DB error", error: err });
           }
 
-          console.log("✅ Share inserted successfully");
+        
           return res.status(200).json("Post shared successfully");
         });
       };
@@ -172,3 +171,82 @@ export const addPost = (req, res) => {
             return res.status(200).json(data[0]);
           });
         };
+
+export const updatePost = (req, res) => {
+  const token = req.cookies.access_token;
+  if (!token) return res.status(401).json("Not logged in!");
+
+  jwt.verify(token, "secretkey", (err, userInfo) => {
+    if (err) return res.status(403).json("Token is not valid!");
+
+    const postId = Number(req.params.id);
+    const {
+      desc,
+      img,
+      place,
+      placeId,
+      placeLat,
+      placeLng,
+      friends,
+    } = req.body;
+
+    const lat =
+      placeLat === null || placeLat === undefined || placeLat === ""
+        ? null
+        : Number(placeLat);
+    const lng =
+      placeLng === null || placeLng === undefined || placeLng === ""
+        ? null
+        : Number(placeLng);
+
+    // Ensure the post exists and belongs to the user
+    db.query("SELECT userId FROM posts WHERE id = ?", [postId], (e1, rows) => {
+      if (e1) return res.status(500).json(e1);
+      if (!rows.length) return res.status(404).json("Post not found");
+      if (rows[0].userId !== userInfo.id)
+        return res.status(403).json("You can update only your post");
+
+      // Update: keep old values when you pass null/undefined (COALESCE)
+      const q = `
+        UPDATE posts
+           SET \`desc\`      = COALESCE(?, \`desc\`),
+               \`img\`       = COALESCE(?, \`img\`),
+               \`place\`     = COALESCE(?, \`place\`),
+               \`place_id\`  = COALESCE(?, \`place_id\`),
+               \`place_lat\` = COALESCE(?, \`place_lat\`),
+               \`place_lng\` = COALESCE(?, \`place_lng\`),
+               \`friends\`   = COALESCE(?, \`friends\`),
+               \`updatedAt\` = NOW()
+         WHERE id = ? AND userId = ?`;
+
+      const values = [
+        desc ?? null,
+        img ?? null,
+        place ?? null,
+        placeId ?? null,
+        Number.isFinite(lat) ? lat : null,
+        Number.isFinite(lng) ? lng : null,
+        friends ?? null,
+        postId,
+        userInfo.id,
+      ];
+
+      db.query(q, values, (e2) => {
+        if (e2) return res.status(500).json(e2);
+
+        // Return fresh row (same shape as getSinglePost)
+        const q2 = `
+          SELECT p.*, p.place_id AS placeId, p.place_lat AS placeLat, p.place_lng AS placeLng,
+                 u.id AS userId, u.name AS userName, u.profilePic
+            FROM posts AS p
+            JOIN users AS u ON u.id = p.userId
+           WHERE p.id = ?`;
+        db.query(q2, [postId], (e3, rows2) => {
+          if (e3) return res.status(500).json(e3);
+          try { logActivity(userInfo.id, "post_update", desc || "", postId); } catch (_) {}
+          return res.status(200).json(rows2[0]);
+        });
+      });
+    });
+  });
+};
