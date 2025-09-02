@@ -13,6 +13,18 @@ export const test = (req, res) => {
 
 // REGISTER USER
 export const register = (req, res) => {
+  const { username, email, password, name } = req.body;
+
+  
+  if (!username || !email || !password || !name) {
+    return res.status(400).json("All fields are required");
+  }
+
+ 
+  if (typeof password !== "string" || password.length < 8) {
+    return res.status(400).json("Password must be at least 8 characters long");
+  }
+
   const q = "SELECT * FROM users WHERE username = ?";
 
   db.query(q, [req.body.username], (err, data) => {

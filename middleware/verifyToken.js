@@ -23,7 +23,7 @@ async function main() {
     const result = await model.generateContent("Explain how AI works in a few words");
     const response = await result.response;
     const text = await response.text();
-    console.log(text); // 👈 AI output here
+    console.log(text); 
   } catch (error) {
     console.error("Gemini AI Error:", error.message);
   }

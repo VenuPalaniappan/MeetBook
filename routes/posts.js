@@ -11,5 +11,6 @@ router.delete("/:id", deletePost);
 router.post("/share", sharePost);
 router.get("/single/:id", verifyToken, getSinglePost);
 router.put("/:id", verifyToken, updatePost); 
+router.put("/:id", updatePost);   
 
 export default router;
